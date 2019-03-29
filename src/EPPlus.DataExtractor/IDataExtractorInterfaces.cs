@@ -33,6 +33,12 @@ namespace EPPlus.DataExtractor
             Action<PropertyExtractionContext, object> setPropertyValueCallback = null,
             Action<PropertyExtractionContext, TValue> setPropertyCastedValueCallback = null);
 
+
+        ICollectionPropertyConfiguration<TRow> WithOptionalProperty<TValue>(Expression<Func<TRow, TValue>> propertyExpression,
+            string column,
+            Action<PropertyExtractionContext, object> setPropertyValueCallback = null,
+            Action<PropertyExtractionContext, TValue> setPropertyCastedValueCallback = null);
+
         /// <summary>
         /// Maps a property from the type defined as the row model
         /// to the column identifier that has its value.
@@ -49,10 +55,12 @@ namespace EPPlus.DataExtractor
         /// <param name="validateCastedCellValue">Optional callback that gets executed after the <paramref name="convertDataFunc"/>.
         /// The first parameter contains the cell address and a method that can abort the entire execution.
         /// The second one the value of the cell.</param>
+        /// <param name="allowNullColumn">Specifies whether to ignore a null column. If true, will ignore the column and not populate the property. If false, will throw ArgumentNullException</param>
         /// <returns></returns>
         ICollectionPropertyConfiguration<TRow> WithProperty<TValue>(Expression<Func<TRow, TValue>> propertyExpression,
             string column, Func<object, TValue> convertDataFunc, Action<PropertyExtractionContext, object> setPropertyValueCallback = null,
-            Action<PropertyExtractionContext, TValue> setPropertyCastedValueCallback = null);
+            Action<PropertyExtractionContext, TValue> setPropertyCastedValueCallback = null,
+            bool allowNullColumn = false);
     }
 
     public interface IGetData<TRow>

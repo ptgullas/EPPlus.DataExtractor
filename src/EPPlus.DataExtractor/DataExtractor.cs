@@ -55,6 +55,24 @@ namespace EPPlus.DataExtractor
         }
 
         /// <summary>
+        /// Same as WithProperty, except that it will ignore null columns instead of throwing an ArgumentNullException. 
+        /// </summary>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="propertyExpression"></param>
+        /// <param name="column"></param>
+        /// <param name="setPropertyValueCallback"></param>
+        /// <param name="setPropertyCastedValueCallback"></param>
+        /// <returns></returns>
+        public ICollectionPropertyConfiguration<TRow> WithOptionalProperty<TValue>(Expression<Func<TRow, TValue>> propertyExpression,
+            string column,
+            Action<PropertyExtractionContext, object> setPropertyValueCallback = null,
+            Action<PropertyExtractionContext, TValue> setPropertyCastedValueCallback = null) {
+            return this.WithProperty(propertyExpression, column, null,
+                setPropertyValueCallback, setPropertyCastedValueCallback, true);
+        }
+
+
+        /// <summary>
         /// Maps a property from the type defined as the row model
         /// to the column identifier that has its value.
         /// </summary>
@@ -70,15 +88,19 @@ namespace EPPlus.DataExtractor
         /// <param name="setPropertyCastedValueCallback">Optional callback that gets executed after the <paramref name="convertDataFunc"/>.
         /// The first parameter contains the cell address and a method that can abort the entire execution.
         /// The second one the value of the cell.</param>
+        /// <param name="allowNullColumn">Specifies whether to ignore a null column. If true, will ignore the column and not populate the property. If false, will throw ArgumentNullException</param>
         /// <returns></returns>
         public ICollectionPropertyConfiguration<TRow> WithProperty<TValue>(Expression<Func<TRow, TValue>> propertyExpression,
             string column, Func<object, TValue> convertDataFunc, Action<PropertyExtractionContext, object> setPropertyValueCallback = null,
-            Action<PropertyExtractionContext, TValue> setPropertyCastedValueCallback = null)
+            Action<PropertyExtractionContext, TValue> setPropertyCastedValueCallback = null, 
+            bool allowNullColumn = false)
         {
             if (propertyExpression == null)
                 throw new ArgumentNullException(nameof(propertyExpression));
-            if(string.IsNullOrWhiteSpace(column))
-                throw new ArgumentNullException(nameof(column));
+            if(string.IsNullOrWhiteSpace(column)) {
+                if (allowNullColumn) { return this; }
+                else { throw new ArgumentNullException(nameof(column)); }
+            }
             if (!DataExtractor.ColumnRegex.IsMatch(column))
                 throw new ArgumentException("The column value must contain only letters.", nameof(column));
 
